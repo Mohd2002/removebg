@@ -3,708 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERASE — Background Remover</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <title>ERASE — Background Remover (Secure)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0f;
-            --surface: #111118;
-            --surface2: #1a1a24;
-            --border: rgba(255,255,255,0.07);
-            --accent: #c8f135;
-            --accent2: #7c6dfa;
-            --text: #f0f0f5;
-            --muted: #6b6b80;
-            --danger: #ff4d6d;
+            --bg: #0a0a0f; --surface: #111118; --accent: #c8f135; --accent2: #7c6dfa;
+            --text: #f0f0f5; --muted: #6b6b80; --border: rgba(255,255,255,0.07);
         }
-
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'DM Sans', sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Animated grain overlay */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 999;
-            opacity: 0.4;
-        }
-
-        /* Glowing blobs */
-        .blob {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(100px);
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.12;
-        }
-        .blob-1 { width: 600px; height: 600px; background: var(--accent2); top: -200px; right: -100px; animation: drift1 18s ease-in-out infinite alternate; }
-        .blob-2 { width: 400px; height: 400px; background: var(--accent); bottom: -150px; left: -100px; animation: drift2 14s ease-in-out infinite alternate; opacity: 0.08; }
-
-        @keyframes drift1 { from { transform: translate(0,0) scale(1); } to { transform: translate(-60px, 80px) scale(1.1); } }
-        @keyframes drift2 { from { transform: translate(0,0) scale(1); } to { transform: translate(40px, -60px) scale(1.15); } }
-
-        /* NAV */
-        nav {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.2rem 2.5rem;
-            background: rgba(10,10,15,0.7);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .logo {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.8rem;
-            letter-spacing: 0.15em;
-            color: var(--accent);
-        }
-
-        .logo span { color: var(--text); }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover { color: var(--text); }
-
-        .nav-badge {
-            background: var(--accent);
-            color: #0a0a0f;
-            padding: 0.4rem 1rem;
-            border-radius: 100px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .nav-badge:hover { opacity: 0.85; }
-
-        /* HERO */
-        .hero {
-            position: relative;
-            z-index: 1;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 8rem 1.5rem 4rem;
-        }
-
-        .eyebrow {
-            font-size: 0.75rem;
-            font-weight: 500;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--accent);
-            background: rgba(200,241,53,0.08);
-            border: 1px solid rgba(200,241,53,0.2);
-            padding: 0.35rem 1rem;
-            border-radius: 100px;
-            margin-bottom: 1.5rem;
-            animation: fadeUp 0.8s ease both;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1 {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: clamp(4rem, 12vw, 9rem);
-            line-height: 0.9;
-            letter-spacing: 0.02em;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            animation: fadeUp 0.8s 0.1s ease both;
-        }
-
-        h1 .accent { color: var(--accent); }
-        h1 .accent2 { color: var(--accent2); }
-
-        .subtitle {
-            color: var(--muted);
-            font-size: 1.05rem;
-            font-weight: 300;
-            max-width: 440px;
-            text-align: center;
-            line-height: 1.7;
-            margin-bottom: 3rem;
-            animation: fadeUp 0.8s 0.2s ease both;
-        }
-
-        /* UPLOAD CARD */
-        .card {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 680px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 2.5rem;
-            animation: fadeUp 0.8s 0.3s ease both;
-        }
-
-        .upload-zone {
-            border: 2px dashed rgba(255,255,255,0.12);
-            border-radius: 14px;
-            padding: 3.5rem 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        .upload-zone::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at center, rgba(200,241,53,0.04) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .upload-zone:hover, .upload-zone.dragover {
-            border-color: var(--accent);
-            background: rgba(200,241,53,0.03);
-        }
-
-        .upload-zone:hover::before, .upload-zone.dragover::before { opacity: 1; }
-
-        #fileInput { display: none; }
-
-        .upload-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.2rem;
-            font-size: 1.6rem;
-            transition: transform 0.3s;
-        }
-
-        .upload-zone:hover .upload-icon { transform: scale(1.05) translateY(-3px); }
-
-        .upload-title {
-            font-size: 1rem;
-            font-weight: 500;
-            margin-bottom: 0.4rem;
-        }
-
-        .upload-sub {
-            font-size: 0.82rem;
-            color: var(--muted);
-            margin-bottom: 1.2rem;
-        }
-
-        .upload-btn {
-            display: inline-block;
-            background: var(--accent);
-            color: #0a0a0f;
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 700;
-            font-size: 0.85rem;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            padding: 0.6rem 1.5rem;
-            border-radius: 100px;
-            cursor: pointer;
-            border: none;
-            transition: opacity 0.2s, transform 0.2s;
-            pointer-events: none;
-        }
-
-        .upload-zone:hover .upload-btn { opacity: 0.85; }
-
-        /* PREVIEW */
-        #preview {
-            width: 100%;
-            max-height: 320px;
-            object-fit: contain;
-            border-radius: 10px;
-            display: none;
-            margin-top: 1.5rem;
-        }
-
-        /* PROCESSING STATE */
-        .processing-bar {
-            display: none;
-            margin-top: 1.5rem;
-        }
-
-        .processing-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: var(--muted);
-            margin-bottom: 0.6rem;
-        }
-
-        .bar-track {
-            height: 4px;
-            background: var(--surface2);
-            border-radius: 100px;
-            overflow: hidden;
-        }
-
-        .bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent2), var(--accent));
-            border-radius: 100px;
-            animation: shimmer 1.5s ease-in-out infinite;
-            width: 0%;
-        }
-
-        @keyframes shimmer {
-            0% { width: 10%; }
-            50% { width: 75%; }
-            75% { width: 90%; }
-            100% { width: 95%; }
-        }
-
-        /* RESULT */
-        .result-section {
-            display: none;
-            margin-top: 1.5rem;
-        }
-
-        .result-label {
-            font-size: 0.75rem;
-            font-weight: 500;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .result-label::before {
-            content: '';
-            display: inline-block;
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: var(--accent);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
-        }
-
-        .result-frame {
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: repeating-conic-gradient(#ffffff0d 0% 25%, transparent 0% 50%) 0 0 / 20px 20px;
-            position: relative;
-        }
-
-        #resultImage {
-            width: 100%;
-            max-height: 380px;
-            object-fit: contain;
-            display: block;
-        }
-
-        /* ACTION BUTTONS */
-        .actions {
-            display: flex;
-            gap: 0.8rem;
-            margin-top: 1.2rem;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 0.8rem 1rem;
-            border: none;
-            border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 600;
-            font-size: 0.88rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: #0a0a0f;
-        }
-
-        .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
-
-        .btn-ghost {
-            background: var(--surface2);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-
-        .btn-ghost:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
-
-        /* STATS BAR */
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 3rem;
-            margin-top: 3rem;
-            animation: fadeUp 0.8s 0.4s ease both;
-        }
-
-        .stat { text-align: center; }
-
-        .stat-num {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.2rem;
-            color: var(--accent);
-            line-height: 1;
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            color: var(--muted);
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            margin-top: 0.2rem;
-        }
-
-        /* FEATURES */
-        .features {
-            position: relative;
-            z-index: 1;
-            max-width: 680px;
-            width: 100%;
-            margin: 4rem auto;
-            padding: 0 1.5rem;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-        }
-
-        .feature {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 1.4rem;
-            transition: border-color 0.3s;
-        }
-
-        .feature:hover { border-color: rgba(255,255,255,0.15); }
-
-        .feature-icon { font-size: 1.4rem; margin-bottom: 0.8rem; }
-
-        .feature-title {
-            font-size: 0.88rem;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-        }
-
-        .feature-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
-
-        /* FOOTER */
-        footer {
-            position: relative;
-            z-index: 1;
-            border-top: 1px solid var(--border);
-            padding: 1.5rem 2.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .footer-logo {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.2rem;
-            letter-spacing: 0.15em;
-            color: var(--accent);
-        }
-
-        .footer-copy { font-size: 0.78rem; color: var(--muted); }
-
-        /* ERROR */
-        .error-msg {
-            display: none;
-            margin-top: 1rem;
-            background: rgba(255,77,109,0.1);
-            border: 1px solid rgba(255,77,109,0.3);
-            border-radius: 10px;
-            padding: 0.8rem 1rem;
-            font-size: 0.85rem;
-            color: var(--danger);
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 600px) {
-            nav { padding: 1rem 1.2rem; }
-            .nav-links { display: none; }
-            .card { padding: 1.5rem; }
-            .features-grid { grid-template-columns: 1fr; }
-            .stats { gap: 1.5rem; }
-            .actions { flex-direction: column; }
-        }
+        body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+        
+        /* Nav & Layout */
+        nav { display: flex; justify-content: space-between; padding: 1.2rem 2.5rem; background: rgba(10,10,15,0.7); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: fixed; width: 100%; top: 0; z-index: 100; }
+        .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; color: var(--accent); letter-spacing: 0.15em; }
+        
+        .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6rem 1.5rem; }
+        h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3.5rem, 10vw, 8rem); line-height: 0.9; text-align: center; margin-bottom: 2rem; }
+        
+        /* Card & Upload */
+        .card { width: 100%; max-width: 600px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 2rem; }
+        .upload-zone { border: 2px dashed rgba(255,255,255,0.1); border-radius: 16px; padding: 3rem 1rem; text-align: center; cursor: pointer; transition: 0.3s; }
+        .upload-zone:hover { border-color: var(--accent); background: rgba(200,241,53,0.02); }
+        #preview { width: 100%; max-height: 250px; object-fit: contain; margin-top: 1.5rem; display: none; border-radius: 10px; }
+
+        /* Loader */
+        .processing-bar { display: none; margin-top: 1.5rem; }
+        .bar-track { height: 4px; background: #1a1a24; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+        .bar-fill { height: 100%; width: 30%; background: var(--accent); animation: loading 1.5s infinite linear; }
+        @keyframes loading { 0% { margin-left: -30%; } 100% { margin-left: 100%; } }
+
+        /* Results */
+        .result-section { display: none; margin-top: 1.5rem; text-align: center; }
+        #resultImage { width: 100%; background: repeating-conic-gradient(#ffffff0d 0% 25%, transparent 0% 50%) 0 0 / 20px 20px; border-radius: 12px; border: 1px solid var(--border); }
+        .btn { width: 100%; padding: 1rem; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-ghost { background: #1a1a24; color: #fff; }
     </style>
 </head>
 <body>
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
 
-    <nav>
-        <div class="logo">ERA<span>SE</span></div>
-        <ul class="nav-links">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">Pricing</a></li>
-            <li><a href="#">API</a></li>
-        </ul>
-        <div class="nav-badge">Try Free</div>
-    </nav>
+    <nav><div class="logo">ERA<span>SE</span></div></nav>
 
     <section class="hero">
-        <div class="eyebrow">✦ AI-Powered Instant Removal</div>
-        <h1>REMOVE<br><span class="accent">ANY</span> <span class="accent2">BG</span></h1>
-        <p class="subtitle">Drop your image. Watch the background vanish in seconds. Powered by remove.bg AI.</p>
-
+        <h1>REMOVE <span style="color: var(--accent);">BG</span> FAST</h1>
         <div class="card">
             <div class="upload-zone" id="uploadZone">
                 <input type="file" id="fileInput" accept="image/*" style="display:none">
-                <div class="upload-icon">🖼️</div>
-                <div class="upload-title">Drop your image here</div>
-                <div class="upload-sub">Supports PNG, JPG, WEBP — up to 12MB</div>
-                <div class="upload-btn">Choose File</div>
-                <img id="preview" alt="Preview">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">☁️</div>
+                <p style="font-weight: 500;">Click or drag image here</p>
+                <p style="font-size: 0.8rem; color: var(--muted); margin-top: 5px;">Supports PNG, JPG (Safe Mode)</p>
+                <img id="preview">
             </div>
 
             <div class="processing-bar" id="processingBar">
-                <div class="processing-label">
-                    <span>Removing background…</span>
-                    <span id="statusText">Analyzing</span>
-                </div>
+                <p style="font-size: 0.8rem; color: var(--accent);">AI is working...</p>
                 <div class="bar-track"><div class="bar-fill"></div></div>
             </div>
 
-            <div class="error-msg" id="errorMsg"></div>
-
             <div class="result-section" id="resultSection">
-                <div class="result-label">Result — Background Removed</div>
-                <div class="result-frame">
-                    <img id="resultImage" alt="Result">
-                </div>
-                <div class="actions">
-                    <button class="btn btn-primary" onclick="downloadImage()">⬇ Download PNG</button>
-                    <button class="btn btn-ghost" onclick="resetTool()">↺ New Image</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-num">5s</div>
-                <div class="stat-label">Avg. Speed</div>
-            </div>
-            <div class="stat">
-                <div class="stat-num">HD</div>
-                <div class="stat-label">Full Res</div>
-            </div>
-            <div class="stat">
-                <div class="stat-num">100%</div>
-                <div class="stat-label">Accurate</div>
+                <img id="resultImage">
+                <button class="btn btn-primary" onclick="downloadImage()">Download PNG</button>
+                <button class="btn btn-ghost" onclick="location.reload()">Upload New</button>
             </div>
         </div>
     </section>
-
-    <section class="features">
-        <div class="features-grid">
-            <div class="feature">
-                <div class="feature-icon">⚡</div>
-                <div class="feature-title">Instant Processing</div>
-                <div class="feature-desc">AI removes backgrounds in under 5 seconds, every time.</div>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🎯</div>
-                <div class="feature-title">Pixel Perfect</div>
-                <div class="feature-desc">Sharp edges, fine hair, complex subjects — handled flawlessly.</div>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">📥</div>
-                <div class="feature-title">HD PNG Export</div>
-                <div class="feature-desc">Download full-resolution transparent PNGs, ready to use.</div>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <div class="footer-logo">ERASE</div>
-        <div class="footer-copy">© 2024 Mohd Danish · All rights reserved</div>
-    </footer>
 
     <script>
-        const API_KEY = '1NbHVfmvT3f94f5Z4mEbsYPg';
-        let processedImageUrl = null;
-
         const fileInput = document.getElementById('fileInput');
         const uploadZone = document.getElementById('uploadZone');
-        const preview = document.getElementById('preview');
         const processingBar = document.getElementById('processingBar');
         const resultSection = document.getElementById('resultSection');
         const resultImage = document.getElementById('resultImage');
-        const errorMsg = document.getElementById('errorMsg');
-        const statusText = document.getElementById('statusText');
+        const preview = document.getElementById('preview');
+        let finalBlobUrl = null;
 
-        // Clicking anywhere on the zone opens file picker
-        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.onclick = () => fileInput.click();
 
-        fileInput.addEventListener('change', e => {
+        fileInput.onchange = (e) => {
             const file = e.target.files[0];
-            if (file) handleFile(file);
-        });
-
-        uploadZone.addEventListener('dragover', e => {
-            e.preventDefault();
-            uploadZone.classList.add('dragover');
-        });
-
-        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-
-        uploadZone.addEventListener('drop', e => {
-            e.preventDefault();
-            uploadZone.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file) handleFile(file);
-        });
-
-        function handleFile(file) {
-            if (!file.type.startsWith('image/')) {
-                showError('Please upload a valid image file (PNG, JPG, WEBP).');
-                return;
-            }
-            hideError();
-            const reader = new FileReader();
-            reader.onload = e => {
-                preview.src = e.target.result;
+            if (file) {
+                // Show preview
+                preview.src = URL.createObjectURL(file);
                 preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-            processImage(file);
-        }
+                startProcessing(file);
+            }
+        };
 
-        const statusSteps = ['Analyzing…', 'Detecting edges…', 'Removing background…', 'Finalizing…'];
-        let statusInterval;
-
-        async function processImage(file) {
-            resultSection.style.display = 'none';
+        async function startProcessing(file) {
+            uploadZone.style.pointerEvents = 'none';
             processingBar.style.display = 'block';
-            processedImageUrl = null;
-
-            let step = 0;
-            statusText.textContent = statusSteps[step];
-            statusInterval = setInterval(() => {
-                step = (step + 1) % statusSteps.length;
-                statusText.textContent = statusSteps[step];
-            }, 1200);
 
             const formData = new FormData();
             formData.append('image_file', file);
-            formData.append('size', 'auto');
 
             try {
-                const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+                // Ab hum remove.bg ko nahi, apne proxy.php ko call karenge
+                const response = await fetch('proxy.php', {
                     method: 'POST',
-                    headers: { 'X-Api-Key': API_KEY },
                     body: formData
                 });
 
-                if (!response.ok) {
-                    const err = await response.json().catch(() => ({}));
-                    throw new Error(err.errors?.[0]?.title || 'Failed to process image');
-                }
+                if (!response.ok) throw new Error('API Error');
 
                 const blob = await response.blob();
-                processedImageUrl = URL.createObjectURL(blob);
-                resultImage.src = processedImageUrl;
-                resultSection.style.display = 'block';
-                resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } catch (err) {
-                showError('Error: ' + err.message);
-            } finally {
-                clearInterval(statusInterval);
+                finalBlobUrl = URL.createObjectURL(blob);
+                
+                resultImage.src = finalBlobUrl;
+                uploadZone.style.display = 'none';
                 processingBar.style.display = 'none';
+                resultSection.style.display = 'block';
+
+            } catch (err) {
+                alert("Processing failed. Check if proxy.php is uploaded.");
+                location.reload();
             }
         }
 
         function downloadImage() {
-            if (!processedImageUrl) return;
-            const a = document.createElement('a');
-            a.href = processedImageUrl;
-            a.download = 'erase-bg-removed.png';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        function resetTool() {
-            preview.style.display = 'none';
-            preview.src = '';
-            resultSection.style.display = 'none';
-            processingBar.style.display = 'none';
-            hideError();
-            processedImageUrl = null;
-            fileInput.value = '';
-            if (statusInterval) clearInterval(statusInterval);
-        }
-
-        function showError(msg) {
-            errorMsg.textContent = msg;
-            errorMsg.style.display = 'block';
-        }
-
-        function hideError() {
-            errorMsg.style.display = 'none';
+            const link = document.createElement('a');
+            link.href = finalBlobUrl;
+            link.download = 'erased_image.png';
+            link.click();
         }
     </script>
 </body>
