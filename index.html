@@ -187,6 +187,7 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            user-select: none;
         }
 
         .upload-zone::before {
@@ -249,9 +250,10 @@
             cursor: pointer;
             border: none;
             transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none;
         }
 
-        .upload-btn:hover { opacity: 0.85; transform: scale(1.02); }
+        .upload-zone:hover .upload-btn { opacity: 0.85; }
 
         /* PREVIEW */
         #preview {
@@ -510,11 +512,11 @@
 
         <div class="card">
             <div class="upload-zone" id="uploadZone">
-                <input type="file" id="fileInput" accept="image/*">
+                <input type="file" id="fileInput" accept="image/*" style="display:none">
                 <div class="upload-icon">🖼️</div>
                 <div class="upload-title">Drop your image here</div>
                 <div class="upload-sub">Supports PNG, JPG, WEBP — up to 12MB</div>
-                <label for="fileInput" class="upload-btn">Choose File</label>
+                <div class="upload-btn">Choose File</div>
                 <img id="preview" alt="Preview">
             </div>
 
@@ -593,6 +595,9 @@
         const resultImage = document.getElementById('resultImage');
         const errorMsg = document.getElementById('errorMsg');
         const statusText = document.getElementById('statusText');
+
+        // Clicking anywhere on the zone opens file picker
+        uploadZone.addEventListener('click', () => fileInput.click());
 
         fileInput.addEventListener('change', e => {
             const file = e.target.files[0];
